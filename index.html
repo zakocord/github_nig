@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Webhook Spammer</title>
+</head>
+<body>
+  <h1>Discord Webhook Spammer</h1>
+  <label>Webhook URL: <input type="text" id="webhookUrl"></label><br>
+  <label>Username: <input type="text" id="username"></label><br>
+  <label>Message: <input type="text" id="message"></label><br>
+  <label>Count: <input type="number" id="count" value="1"></label><br>
+  <button onclick="sendSpam()">Send</button>
+
+  <script>
+    async function sendSpam() {
+      const url = document.getElementById("webhookUrl").value;
+      const username = document.getElementById("username").value;
+      const message = document.getElementById("message").value;
+      const count = parseInt(document.getElementById("count").value);
+
+      for (let i = 0; i < count; i++) {
+        try {
+          const res = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              username: username,
+              content: message,
+              avatar_url: "https://raw.githubusercontent.com/duckboxxer/asset_rat_id_49e3fs303/refs/heads/main/depositphotos_63079503-stock-photo-clown.jpg"
+            })
+          });
+          if (res.status === 204 || res.status === 200) {
+            console.log(`[✓] Sent (${res.status})`);
+          } else if (res.status === 429) {
+            const json = await res.json();
+            const retry = json.retry_after || 1000;
+            console.warn(`[!] Rate limited ~ Retrying in ${retry}ms`);
+            await new Promise(resolve => setTimeout(resolve, retry));
+            i--; // retry
+          } else {
+            console.error(`[✗] Failed: ${res.status}`);
+          }
+        } catch (e) {
+          console.error(`[!] Error: ${e}`);
+        }
+      }
+    }
+  </script>
+</body>
+</html>
